@@ -1,0 +1,140 @@
+pro PNG_IRAKURRI
+rgbdata = UINDGEN(4,320,240)
+cidata = BYTSCL(DIST(256))
+red = indgen(256)
+green = indgen(256)
+blue = indgen(256)
+WRITE_PNG,'rgb_irudia.png',rgbdata
+WRITE_PNG,'ci_irudia.png',cidata,red,green,blue
+
+file=DIALOG_PICKFILE(FILTER='*.png', /FIX_FILTER, /READ, TITLE='AUKERATU PNG artxibo bat' )
+
+;; RGB artxiboak 16 bit/chanell motakoentzako. Color Indexed 8 bit/chanell argazkientzat
+
+names = ['rgb_irudia.png','ci_irudia.png',file] 
+FOR i=0,N_ELEMENTS(names)-1 DO BEGIN
+   ok = QUERY_PNG(names[i],s)
+   IF (ok) THEN BEGIN
+      
+      IF (s.HAS_PALETTE) THEN BEGIN
+         img = READ_PNG(names[i],rpal,gpal,bpal)
+         tamaina=size(img, /DIMENSIONS)
+         
+      ENDIF ELSE BEGIN
+         img = READ_PNG(names[i])
+         tamaina=size(img, /DIMENSIONS)
+         
+                           
+      ENDELSE
+   ENDIF ELSE BEGIN
+      PRINT,names[i],' Ez da PNG artxiboa'
+   ENDELSE
+ENDFOR
+
+IF N_ELEMENTS(tamaina) NE 3 THEN BEGIN
+    DEVICE,DECOMPOSED=0
+    n=tamaina[0]
+    m=tamaina[1]
+
+    Longitude = DBLARR(n)
+    Latitude  = DBLARR(m)
+    Longitude_MIN=100.25
+    Longitude_MAX=150.34
+    Latitude_MIN=5.75
+    Latitude_MAX=18.66
+    FOR i = 0, n-1 DO BEGIN
+        
+        Longitude[n-i-1] = Longitude_MIN+i * (Longitude_MAX-Longitude_MIN)/(n-1)
+     
+    ENDFOR
+
+    FOR j = 0, m-1 DO BEGIN
+      
+      Latitude[j] = Latitude_MIN+(j) * (Latitude_MAX-Latitude_MIN)/(m-1)
+      
+    ENDFOR
+  
+    WINDOW, 1,Title = 'NEB', XSize = n, YSize = m
+    TVLCT, rpal,gpal,bpal
+    TVIMAGE, img, Position=[0.1,0.1,0.9,0.9]
+    Plot, Longitude, Latitude, XRange=[Longitude_MIN,Longitude_MAX], YRange=[Latitude_MIN,Latitude_MAX],$
+          XStyle = 1, YStyle = 1, XTitle = 'Longitude', YTitle = 'Latitude', $
+          Position=[0.1,0.1,0.9,0.9], /NoData, /NoErase, XTicks = 6 ,YTicks = 12,COLOR=0
+    
+
+ENDIF ELSE BEGIN
+   imageRGB = img[0:2, *,*] ; honekin pixel bakoitza kolore batekin dago lotuta
+   Device, Decomposed=0
+   n=tamaina[1]
+   m=tamaina[2]
+   
+   Longitude = DBLARR(n)    ; Bi hauekin bektore 0-dunak sortzen ditugu. Tamaina argazkian pixel kopurua da
+   Latitude  = DBLARR(m)
+   Longitude_MIN=250.00
+   Longitude_MAX=306.71
+   Latitude_MIN=1.64
+   Latitude_MAX=45.63
+   
+;Bi FOR hauekin pixel bakoitzari balio bat emango diegu. Gero argazkia BYTSLCren bidez erakusteko. 
+   
+   FOR i = 0, n-1 DO BEGIN
+        Longitude[n-i-1] = Longitude_MIN+i * (Longitude_MAX-Longitude_MIN)/(n-1)
+             
+   ENDFOR
+
+  FOR j = 0, m-1 DO BEGIN
+      Latitude[j] = Latitude_MIN+(j) * (Latitude_MAX-Latitude_MIN)/(m-1)
+  ENDFOR
+  
+  WINDOW, 1,Title = 'NEB', XSize = 1080, YSize = 540
+  TVIMAGE, Bytscl(imageRGB,/NAN), Position=[0.1,0.1,0.9,0.9]
+  Plot, Longitude, Latitude ,XRange=[Longitude_MAX,Longitude_MIN], YRange=[Latitude_MIN,Latitude_MAX],$
+        XStyle = 1, YStyle = 1, XTitle = 'Longitude', YTitle = 'Latitude', $
+        Position=[0.1,0.1,0.9,0.9], /NoData, /NoErase, XTicks = 20 ,YTicks = 20
+                
+        
+  print, 'Sakatu BARGEaren ezkerreko aldea'  
+  CURSOR, X, Y ,/DATA, /DOWN
+  barge_ezkerra=[X,Y]
+  testua1= '('+string(barge_ezkerra[0])+string(barge_ezkerra[1])+')'
+  XYOUTS, X, Y,testua1, ALIGNMENT=1,CHARSIZE=0.9, /DATA, /NOCLIP
+  print, 'Sakatu BARGEaren eskumako aldea'
+  CURSOR, X, Y ,/DATA, /DOWN
+  barge_eskuma=[X,Y]
+  testua2= '('+string(barge_eskuma[0])+string(barge_eskuma[1])+')'
+  XYOUTS, X, Y,testua2,ALIGNMENT=0,CHARSIZE=0.9, /DATA, /NOCLIP
+  
+  
+    print, 'Sakatu BARGEaren beheko aldea'  
+  CURSOR, X, Y ,/DATA, /DOWN
+  barge_behea=[X,Y]
+  testua3= '('+string(barge_behea[0])+string(barge_behea[1])+')'
+  XYOUTS, X, Y,testua3, ALIGNMENT=0.5,CHARSIZE=0.9, /DATA, /NOCLIP
+  print, 'Sakatu BARGEaren goiko aldea'
+  CURSOR, X, Y ,/DATA, /DOWN
+  barge_goia=[X,Y]
+  testua4= '('+string(barge_goia[0])+string(barge_goia[1])+')'
+  XYOUTS, X, Y,testua4,ALIGNMENT=0.5,CHARSIZE=0.9, /DATA, /NOCLIP
+  
+  
+  print, 'Sakatu BARGEaren zentrua'  
+  CURSOR, X, Y ,/DATA, /DOWN
+  barge_zentrua=[X,Y]
+  testua0= '('+string(barge_zentrua[0])+string(barge_zentrua[1])+')'
+;  XYOUTS, X, Y,testua0, ALIGNMENT=0,CHARSIZE=0.9, /DATA, /NOCLIP
+  
+; Koordenatuak
+
+  print, 'Ezkerreko aldearen koordenatuak:',barge_ezkerra
+  print, 'Eskumako aldearen koordenatuak:',barge_eskuma
+  print, 'Beheko aldearen koordenatuak:',barge_behea
+  print, 'Goiko aldearen koordenatuak:',barge_goia
+  print, 'Zentruan koordenatuak:',barge_zentrua
+  
+      
+ENDELSE
+
+
+
+END
+
